@@ -1,12 +1,13 @@
 import requests
 import os
 
-tj_token = os.environ['TJ_TOKEN']
-address = 'https://api.tjournal.ru/v1.6/'
-device_token_header_name = 'X-Device-Token'
+def setup_tj_api():
+	tj_token = os.environ['TJ_TOKEN']
+	tj_api_tj_api_address = 'https://api.tjournal.ru/v1.6/'
+	device_token_header_name = 'X-Device-Token'
 
 def add_comment(entry_id, attachments):
-	response = requests.post(address + 'comment/add',
+	response = requests.post(tj_api_address + 'comment/add',
 		data = {'id': entry_id, 'reply_to':0, 'text':'[я](https://ya.ru/) 😡', 'attachments':attachments},
 		headers = {device_token_header_name: tj_token})
 
@@ -16,7 +17,7 @@ def add_comment(entry_id, attachments):
 		raise BaseException("error add comment")
 
 def upload_attachment(url):
-	response = requests.post(address + 'uploader/extract',
+	response = requests.post(tj_api_address + 'uploader/extract',
 		data = {'url': url},
 		headers = {device_token_header_name: tj_token})
 
@@ -36,7 +37,7 @@ def create_entry(attachment):
 		'text':'текст текст текст текст',
 		'attachments':attachment}
 
-	response = requests.post(address + 'entry/create',
+	response = requests.post(tj_api_address + 'entry/create',
 		data = entry,
 		headers = {device_token_header_name: tj_token})
 
@@ -48,8 +49,22 @@ def create_entry(attachment):
 	#print(response.json()['result'])
 	return response.json()['result']['id']
 
-attachment = upload_attachment('https://coub.com/view/1mnj6k')
-entry_id = create_entry(attachment)
-add_comment(entry_id, attachment)
+def get_coub():
+	coub_api_address = 'https://coub.com/api/v2/search/coubs?q=animals&order_by=newest_popular'
+	response = requests.get(coub_api_address)
 
-print("entry ID -", entry_id)
+	if response.status_code != 200:
+		print (response.status_code)
+		print (response.text)
+		raise BaseException("get coub error")
+	
+	return "https://coub.com/view/" + response.json()['coubs'][0]['permalink']
+
+#setup_tj_api()
+#attachment = upload_attachment('https://coub.com/view/1mnj6k')
+#entry_id = create_entry(attachment)
+#add_comment(entry_id, attachment)
+#print("entry ID -", entry_id)
+
+coub_url = get_coub()
+print(coub_url)
